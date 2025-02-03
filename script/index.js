@@ -33,7 +33,7 @@ const renderNews = (news, container, title = "", id) => {
     </section>`;
     return;
   } else {
-  container.innerHTML = `
+    container.innerHTML = `
     ${title ? `
     <div class="title-wrapper">
       <div class="container">
@@ -48,7 +48,7 @@ const renderNews = (news, container, title = "", id) => {
             .map(
               ({ urlToImage, title, url, description, publishedAt, author }) => `
                 <li class="news-item">
-                  <img src="${urlToImage || 'https://loremflickr.com/268/201'}" alt="${title}" class="news-image">
+                  <img src="./img/unsplash.png" data-src="${urlToImage || './img/unsplash.png'}" alt="${title}" class="news-image lazy-load">
                   <h3 class="news-title">
                     <a href="${url}" target="_blank" class="news-link">${title}</a>
                   </h3>
@@ -59,19 +59,33 @@ const renderNews = (news, container, title = "", id) => {
                     </time>
                     <p class="news-author">${author || "Неизвестный"}</p>
                   </div>
-                </li>
-              `
+                </li>`
             )
             .join("")}
         </ul>
       </div>
     </section>`;
+    lazyLoadImages();
   }
+};
+
+const lazyLoadImages = () => {
+  const images = document.querySelectorAll(".lazy-load");
+  images.forEach(img => {
+    const src = img.getAttribute("data-src");
+    if (!src) return;
+    
+    const tempImg = new Image();
+    tempImg.src = src;
+    tempImg.onload = () => {
+      img.src = src;
+    };
+  });
 };
 
 const loadHeadlines = async (country = "ru") => {
   const freshNewsContainer = document.getElementById("fresh-results");
-  freshNewsContainer.innerHTML = "<p>Загрузка новостей...</p>";
+  freshNewsContainer.innerHTML = "<img src='./img/preload.png' class='preloader' alt='Загрузка...'>";
   const news = await fetchNews(`${API_URL_HEADLINES}${country}&pageSize=8`);
   renderNews(news, freshNewsContainer, "Свежие новости", "fresh-news");
 };
@@ -92,7 +106,7 @@ const handleSearch = async (event) => {
     return;
   }
 
-  searchResultsContainer.innerHTML = "<p>🔄 Загрузка...</p>";
+  searchResultsContainer.innerHTML = "<img src='./img/preload.png' class='preloader' alt='Загрузка...'>";
 
   try {
     const [searchResults, headlines] = await Promise.all([
