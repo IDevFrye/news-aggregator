@@ -71,17 +71,25 @@ const renderNews = (news, container, title = "", id) => {
 
 const lazyLoadImages = () => {
   const images = document.querySelectorAll(".lazy-load");
-  images.forEach(img => {
-    const src = img.getAttribute("data-src");
-    if (!src) return;
-    
-    const tempImg = new Image();
-    tempImg.src = src;
-    tempImg.onload = () => {
-      img.src = src;
-    };
-  });
+  
+  const loadImage = (img) => {
+    return new Promise((resolve) => {
+      const src = img.getAttribute("data-src");
+      if (!src) return resolve();
+
+      const tempImg = new Image();
+      tempImg.src = src;
+      tempImg.onload = () => {
+        img.src = src;
+        resolve();
+      };
+      tempImg.onerror = () => resolve();
+    });
+  };
+
+  return Promise.all(Array.from(images).map(loadImage));
 };
+
 
 const loadHeadlines = async (country = "ru") => {
   const freshNewsContainer = document.getElementById("fresh-results");
